@@ -978,6 +978,12 @@ impl<'a, SP> ForkserverExecutorBuilder<'a, SP> {
         moved
     }
 
+    /// Place the input at this position and set the directory for the input.
+    /// Uses the default filename for the input from `Self::arg_input_file_std`
+    #[must_use]
+    pub fn arg_input_file_dir<P: AsRef<Path>>(self, dir: P) -> Self {
+        self.arg_input_file(dir.as_ref().join(get_unique_std_input_file()))
+    }
     /// Place the input at this position and set the default filename for the input.
     #[must_use]
     /// The filename includes the PID of the fuzzer to ensure that no two fuzzers write to the same file
