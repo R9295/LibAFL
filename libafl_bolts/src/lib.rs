@@ -318,6 +318,8 @@ pub enum Error {
     OsError(io::Error, String, ErrorBacktrace),
     /// Something else happened
     Unknown(String, ErrorBacktrace),
+    // Error with the corpora
+    CorpusError(String, ErrorBacktrace),
 }
 
 impl Error {
@@ -434,6 +436,14 @@ impl Error {
     {
         Error::Unknown(arg.into(), ErrorBacktrace::new())
     }
+    /// Error with corpora
+    #[must_use]
+    pub fn corpus_error<S>(arg: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Error::CorpusError(arg.into(), ErrorBacktrace::new())
+    }
 }
 
 impl Display for Error {
@@ -492,6 +502,10 @@ impl Display for Error {
             }
             Self::Unknown(s, b) => {
                 write!(f, "Unknown error: {0}", &s)?;
+                display_error_backtrace(f, b)
+            }
+            Self::CorpusError(s, b) => {
+                write!(f, "Corpus error: {0}", &s)?;
                 display_error_backtrace(f, b)
             }
         }
