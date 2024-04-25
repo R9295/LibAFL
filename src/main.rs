@@ -9,7 +9,7 @@ use libafl::{
     events::SimpleEventManager,
     executors::forkserver::ForkserverExecutor,
     feedback_and_fast, feedback_or,
-    feedbacks::{CrashFeedback, MaxMapFeedback, TimeFeedback},
+    feedbacks::{CrashFeedback, MaxMapFeedback, TimeFeedback, TimeoutFeedback},
     fuzzer::{Fuzzer, StdFuzzer},
     inputs::BytesInput,
     monitors::SimpleMonitor,
@@ -18,7 +18,7 @@ use libafl::{
     schedulers::{IndexesLenTimeMinimizerScheduler, QueueScheduler},
     stages::mutational::StdMutationalStage,
     state::{HasCorpus, StdState},
-    HasMetadata,
+    HasMetadata, feedback_or_fast,
 };
 use libafl_bolts::{
     current_nanos,
@@ -50,10 +50,19 @@ fn main() {
         MaxMapFeedback::new(&edges_observer),
         TimeFeedback::with_observer(&time_observer)
     );
-    let mut objective = feedback_and_fast!(
-        CrashFeedback::new(),
-        MaxMapFeedback::with_name("mapfeedback_metadata_objective", &edges_observer)
-    );
+    let mut objective;
+    if opt.ignore_timeouts {
+        objective = feedback_or_fast!(
+            CrashFeedback::new(),
+            MaxMapFeedback::with_name("mapfeedback_metadata_objective", &edges_observer)
+        );
+    } else {
+        objective = feedback_or_fast!(
+            CrashFeedback::new(),
+            TimeoutFeedback::new(),
+            MaxMapFeedback::with_name("mapfeedback_metadata_objective", &edges_observer)
+        );
+    }
     let mut state = StdState::new(
         StdRand::with_seed(current_nanos()),
         InMemoryCorpus::<BytesInput>::new(),
@@ -146,6 +155,8 @@ struct Opt {
     #[arg(env = "AFL_MAP_SIZE", default_value_t = 65536,
         value_parser= validate_map_size)]
     map_size: u32,
+    #[arg(env = "AFL_IGNORE_TIMEOUTS")]
+    ignore_timeouts: bool,
 }
 
 fn validate_map_size(s: &str) -> Result<u32, String> {
