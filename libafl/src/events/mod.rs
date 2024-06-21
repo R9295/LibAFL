@@ -353,6 +353,8 @@ where
         /// Tag of this buffer
         tag: String,
     },
+    /// Exit gracefully
+    Stop,
     /*/// A custom type
     Custom {
         // TODO: Allow custom events
@@ -377,6 +379,7 @@ where
             /*Event::Custom {
                 sender_id: _, /*custom_event} => custom_event.name()*/
             } => "todo",*/
+            Event::Stop => "Stop",
         }
     }
 
