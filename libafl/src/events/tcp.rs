@@ -1288,6 +1288,9 @@ where
                 compiler_fence(Ordering::SeqCst);
 
                 if child_status == CTRL_C_EXIT || staterestorer.wants_to_exit() {
+                    if let Err(err) = mgr.detach_from_broker(self.broker_port) {
+                        log::error!("Failed to detach from broker: {err}");
+                    }
                     return Err(Error::shutting_down());
                 }
 

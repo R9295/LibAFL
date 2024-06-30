@@ -2455,6 +2455,7 @@ where
     /// Create a new [`LlmpBroker`] attaching to a TCP port
     #[cfg(feature = "std")]
     pub fn create_attach_to_tcp(shmem_provider: SP, hooks: HT, port: u16) -> Result<Self, Error> {
+        println!("2");
         Ok(LlmpBroker {
             inner: LlmpBrokerInner::create_attach_to_tcp(shmem_provider, port)?,
             hooks,
@@ -2469,6 +2470,7 @@ where
         port: u16,
         keep_pages_forever: bool,
     ) -> Result<Self, Error> {
+        println!("creating a new llmp_broker??");
         Ok(LlmpBroker {
             inner: LlmpBrokerInner::with_keep_pages_attach_to_tcp(
                 shmem_provider,
@@ -2861,6 +2863,7 @@ where
     /// Create a new [`LlmpBrokerInner`] attaching to a TCP port
     #[cfg(feature = "std")]
     pub fn create_attach_to_tcp(shmem_provider: SP, port: u16) -> Result<Self, Error> {
+        println!("creating a new llmp_broker_inner (2) why??");
         Self::with_keep_pages_attach_to_tcp(shmem_provider, port, true)
     }
 
@@ -2871,6 +2874,7 @@ where
         port: u16,
         keep_pages_forever: bool,
     ) -> Result<Self, Error> {
+        println!("creating a new llmp_broker_inner why?? {}", port);
         match tcp_bind(port) {
             Ok(listener) => {
                 let mut broker =

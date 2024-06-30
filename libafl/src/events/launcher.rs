@@ -223,7 +223,7 @@ where
         let num_cores = core_ids.len();
         let mut handles = vec![];
 
-        log::info!("spawning on cores: {:?}", self.cores);
+        println!("spawning on cores: {:?}", self.cores);
 
         self.opened_stdout_file = self
             .stdout_file
@@ -248,12 +248,12 @@ where
                         self.shmem_provider.post_fork(false)?;
                         handles.push(child.pid);
                         #[cfg(feature = "std")]
-                        log::info!("child spawned and bound to core {id}");
+                        println!("child spawned and bound to core {id}");
                     }
                     ForkResult::Child => {
                         // # Safety
                         // A call to `getpid` is safe.
-                        log::info!("{:?} PostFork", unsafe { libc::getpid() });
+                        println!("{:?} PostFork", unsafe { libc::getpid() });
                         self.shmem_provider.post_fork(true)?;
 
                         #[cfg(feature = "std")]
@@ -292,7 +292,7 @@ where
 
         if self.spawn_broker {
             #[cfg(feature = "std")]
-            log::info!("I am broker!!.");
+            println!("I am broker!!.");
 
             // TODO we don't want always a broker here, think about using different laucher process to spawn different configurations
             let builder = RestartingMgr::<EMH, MT, S, SP>::builder()
@@ -321,11 +321,11 @@ where
         } else {
             for handle in &handles {
                 let mut status = 0;
-                log::info!("Not spawning broker (spawn_broker is false). Waiting for fuzzer children to exit...");
+                println!("Not spawning broker (spawn_broker is false). Waiting for fuzzer children to exit...");
                 unsafe {
                     libc::waitpid(*handle, &mut status, 0);
                     if status != 0 {
-                        log::info!("Client with pid {handle} exited with status {status}");
+                        println!("Client with pid {handle} exited with status {status}");
                     }
                 }
             }
@@ -376,7 +376,7 @@ where
                 let num_cores = core_ids.len();
                 let mut handles = vec![];
 
-                log::info!("spawning on cores: {:?}", self.cores);
+                println!("spawning on cores: {:?}", self.cores);
 
                 let debug_output = std::env::var("LIBAFL_DEBUG_OUTPUT").is_ok();
                 #[cfg(all(feature = "std", unix))]
@@ -443,7 +443,7 @@ where
 
         if self.spawn_broker {
             #[cfg(feature = "std")]
-            log::info!("I am broker!!.");
+            println!("I am broker!!.");
 
             let builder = RestartingMgr::<EMH, MT, S, SP>::builder()
                 .shmem_provider(self.shmem_provider.clone())
@@ -465,11 +465,11 @@ where
                 handle.kill()?;
             }
         } else {
-            log::info!("Not spawning broker (spawn_broker is false). Waiting for fuzzer children to exit...");
+            println!("Not spawning broker (spawn_broker is false). Waiting for fuzzer children to exit...");
             for handle in &mut handles {
                 let ecode = handle.wait()?;
                 if !ecode.success() {
-                    log::info!("Client with handle {handle:?} exited with {ecode:?}");
+                    println!("Client with handle {handle:?} exited with {ecode:?}");
                 }
             }
         }
@@ -655,7 +655,7 @@ where
         let num_cores = core_ids.len();
         let mut handles = vec![];
 
-        log::debug!("spawning on cores: {:?}", self.cores);
+        println!("spawning on cores: {:?}", self.cores);
 
         self.opened_stdout_file = self
             .stdout_file
@@ -677,10 +677,10 @@ where
                         self.shmem_provider.post_fork(false)?;
                         handles.push(child.pid);
                         #[cfg(feature = "std")]
-                        log::info!("child spawned and bound to core {id}");
+                        println!("child spawned and bound to core {id}");
                     }
                     ForkResult::Child => {
-                        log::info!("{:?} PostFork", unsafe { libc::getpid() });
+                        println!("{:?} PostFork", unsafe { libc::getpid() });
                         self.shmem_provider.post_fork(true)?;
 
                         std::thread::sleep(Duration::from_millis(index * self.launch_delay));
@@ -698,7 +698,7 @@ where
 
                         if index == 1 {
                             // Main client
-                            log::debug!("Running main client on PID {}", std::process::id());
+                            println!("Running main client on PID {}", std::process::id());
                             let (state, mgr) =
                                 main_inner_mgr_builder.take().unwrap()(self, *bind_to)?;
 
@@ -719,7 +719,7 @@ where
                             self.main_run_client.take().unwrap()(state, c_mgr, *bind_to)
                         } else {
                             // Secondary clients
-                            log::debug!("Running secondary client on PID {}", std::process::id());
+                            println!("Running secondary client on PID {}", std::process::id());
                             let (state, mgr) =
                                 secondary_inner_mgr_builder.take().unwrap()(self, *bind_to)?;
 
@@ -776,6 +776,7 @@ where
                 true,
             )?
         }));
+        println!("hello, world!");
 
         #[cfg(feature = "multi_machine")]
         assert!(
@@ -785,7 +786,7 @@ where
 
         // If we should add another broker, add it to other brokers.
         if self.spawn_broker {
-            log::info!("I am broker!!.");
+            println!("I am broker!!.");
 
             #[cfg(not(feature = "multi_machine"))]
             let llmp_hook =
@@ -804,7 +805,7 @@ where
             )?;
 
             if let Some(remote_broker_addr) = self.remote_broker_addr {
-                log::info!("B2b: Connecting to {:?}", &remote_broker_addr);
+                println!("B2b: Connecting to {:?}", &remote_broker_addr);
                 broker.inner_mut().connect_b2b(remote_broker_addr)?;
             };
 
@@ -817,7 +818,7 @@ where
             brokers.add(Box::new(broker));
         }
 
-        log::debug!(
+        println!(
             "Brokers have been initialized on port {}.",
             std::process::id()
         );
@@ -825,8 +826,7 @@ where
         // Loop over all the brokers that should be polled
         brokers.loop_with_timeouts(Duration::from_secs(30), Some(Duration::from_millis(5)));
 
-        #[cfg(feature = "llmp_debug")]
-        log::info!("The last client quit. Exiting.");
+        println!("The last client quit. Exiting.");
 
         // Brokers exited. kill all clients.
         for handle in &handles {

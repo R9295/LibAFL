@@ -34,13 +34,7 @@ use crate::{
         AdaptiveSerializer, CustomBufEventResult, Event, EventConfig, EventFirer, EventManager,
         EventManagerHooksTuple, EventManagerId, EventProcessor, EventRestarter,
         HasCustomBufHandlers, HasEventManagerId, LogSeverity, ProgressReporter,
-    },
-    executors::{Executor, HasObservers},
-    fuzzer::{EvaluatorObservers, ExecutionProcessor},
-    inputs::{Input, NopInput, UsesInput},
-    observers::{ObserversTuple, TimeObserver},
-    state::{HasExecutions, HasLastReportTime, NopState, State, UsesState},
-    Error, HasMetadata,
+    }, executors::{Executor, HasObservers}, fuzzer::{EvaluatorObservers, ExecutionProcessor}, inputs::{Input, NopInput, UsesInput}, observers::{ObserversTuple, TimeObserver}, prelude::Stoppable, state::{HasExecutions, HasLastReportTime, NopState, State, UsesState}, Error, HasMetadata
 };
 
 pub(crate) const _LLMP_TAG_TO_MAIN: Tag = Tag(0x3453453);
@@ -295,6 +289,7 @@ where
                     true
                 }
                 Event::UpdateExecStats { .. } => true, // send it but this guy won't be handled. the only purpose is to keep this client alive else the broker thinks it is dead and will dc it
+                Event::Stop => true,
                 _ => false,
             };
 
@@ -393,7 +388,12 @@ where
     }
 
     fn on_shutdown(&mut self) -> Result<(), Error> {
-        self.inner.on_shutdown()
+        if !self.is_main {
+        println!("on shutdown called");
+        self.client.sender_mut().send_exiting()?;
+        self.inner.on_shutdown()?;
+        }
+        Ok(())
     }
 }
 
@@ -480,7 +480,7 @@ impl<EM, EMH, S, SP> CentralizedEventManager<EM, EMH, S, SP>
 where
     EM: UsesState + EventFirer + AdaptiveSerializer + HasEventManagerId,
     EMH: EventManagerHooksTuple<EM::State>,
-    S: State,
+    S: State + Stoppable,
     SP: ShMemProvider,
 {
     #[cfg(feature = "llmp_compression")]
@@ -665,6 +665,10 @@ where
                 } else {
                     log::debug!("[{}] {} was discarded...)", process::id(), event_name);
                 }
+            },
+            Event::Stop => {
+/*                 *state.should_stop_mut() = true; */
+                self.inner.fire(state, event)?;
             }
             _ => {
                 return Err(Error::unknown(format!(
