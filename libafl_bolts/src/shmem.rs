@@ -269,6 +269,10 @@ pub trait ShMemProvider: Clone + Default + Debug {
 
     /// Create a new shared memory mapping to hold an object of the given type, and initializes it with the given value.
     fn uninit_on_shmem<T: Sized + 'static>(&mut self) -> Result<Self::ShMem, Error> {
+        println!("{:#?}", mem::size_of::<T>());
+        println!("{:#?}", mem::size_of::<T>());
+        println!("{:#?}", mem::size_of::<T>());
+        println!("{:#?}", mem::size_of::<T>());
         self.new_shmem(mem::size_of::<T>())
     }
 
