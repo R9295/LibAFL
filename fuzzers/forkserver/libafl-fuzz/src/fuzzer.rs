@@ -178,7 +178,7 @@ define_run_client!(state, mgr, fuzzer_dir, core_id, opt, is_main_node, {
     let mut tokens = Tokens::new();
     tokens = tokens.add_from_files(&opt.dicts)?;
 
-    // Create a AflStatsStage;
+    /* // Create a AflStatsStage;
     let afl_stats_stage = AflStatsStage::builder()
         .stats_file(fuzzer_dir.join("fuzzer_stats"))
         .plot_file(fuzzer_dir.join("plot_data"))
@@ -192,7 +192,7 @@ define_run_client!(state, mgr, fuzzer_dir, core_id, opt, is_main_node, {
         .exec_timeout(opt.hang_timeout)
         .target_mode(fuzzer_target_mode(opt).to_string())
         .build()
-        .expect("invariant; should never occur");
+        .expect("invariant; should never occur"); */
 
     // Create an observation channel to keep track of the execution time.
     let time_observer = TimeObserver::new("time");
@@ -218,14 +218,14 @@ define_run_client!(state, mgr, fuzzer_dir, core_id, opt, is_main_node, {
     let enable_capture_timeouts = Rc::new(RefCell::new(false));
     let capture_timeout_feedback = CaptureTimeoutFeedback::new(Rc::clone(&enable_capture_timeouts));
 
-    // Like AFL++ we re-run all timeouts with double the timeout to assert that they are not false positives
+    /* // Like AFL++ we re-run all timeouts with double the timeout to assert that they are not false positives
     let timeout_verify_stage = IfStage::new(
         |_, _, _, _| Ok(!opt.ignore_timeouts),
         tuple_list!(VerifyTimeoutsStage::new(
             enable_capture_timeouts,
             Duration::from_millis(opt.hang_timeout),
         )),
-    );
+    ); */
 
     /*
      * Feedback to decide if the Input is "solution worthy".
@@ -454,7 +454,7 @@ define_run_client!(state, mgr, fuzzer_dir, core_id, opt, is_main_node, {
     // Tell [`SeedFeedback`] that we're done loading seeds; rendering it benign.
     fuzzer.feedback_mut().done_loading_seeds();
 
-    // Create a Sync stage to sync from foreign fuzzers
+    /* // Create a Sync stage to sync from foreign fuzzers
     let sync_stage = IfStage::new(
         |_, _, _, _| Ok(is_main_node && !opt.foreign_sync_dirs.is_empty()),
         tuple_list!(TimeTrackingStageWrapper::<SyncTime, _, _>::new(
@@ -463,7 +463,7 @@ define_run_client!(state, mgr, fuzzer_dir, core_id, opt, is_main_node, {
                 opt.foreign_sync_interval
             )
         )),
-    );
+    ); */
 
     // Create a CmpLog executor if configured.
     // We only run cmplog on the main node
@@ -531,9 +531,9 @@ define_run_client!(state, mgr, fuzzer_dir, core_id, opt, is_main_node, {
             calibration,
             cmplog,
             mutational_stage,
-            timeout_verify_stage,
+            /* timeout_verify_stage,
             afl_stats_stage,
-            sync_stage
+            sync_stage */
         );
 
         // Run our fuzzer; WITH CmpLog
@@ -550,9 +550,9 @@ define_run_client!(state, mgr, fuzzer_dir, core_id, opt, is_main_node, {
         let mut stages = tuple_list!(
             calibration,
             mutational_stage,
-            timeout_verify_stage,
+            /* timeout_verify_stage,
             afl_stats_stage,
-            sync_stage
+            sync_stage */
         );
 
         // Run our fuzzer; NO CmpLog
