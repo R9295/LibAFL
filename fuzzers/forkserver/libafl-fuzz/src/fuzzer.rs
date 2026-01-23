@@ -348,7 +348,7 @@ define_run_client!(state, mgr, fuzzer_dir, core_id, opt, is_main_node, {
             }
 
             // MCDC
-            executor.env("MCDC_ID", format!("{}", core_id.0));
+            executor.envs(format!("MCDC_ID={}", core_id.0));
 
             // Enable autodict if configured
             if !opt.no_autodict {
