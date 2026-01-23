@@ -215,7 +215,8 @@ fn main() {
 struct Opt {
     executable: PathBuf,
     target_args: Vec<String>,
-
+    #[arg(long)]
+    mcdc_executable: Option<PathBuf>,
     // NOTE: afl-fuzz does not accept multiple input directories
     #[arg(short = 'i')]
     input_dir: PathBuf,

@@ -65,6 +65,7 @@ use crate::{
     env_parser::AFL_DEFAULT_MAP_SIZE,
     executor::{find_afl_binary, SupportedExecutors},
     feedback::{
+        mcdc::MCDCFeedback,
         filepath::CustomFilepathToTestcaseFeedback, persistent_record::PersistentRecordFeedback,
         seed::SeedFeedback,
     },
@@ -207,6 +208,7 @@ define_run_client!(state, mgr, fuzzer_dir, core_id, opt, is_main_node, {
     let mut feedback = SeedFeedback::new(
         feedback_or!(
             map_feedback,
+            MCDCFeedback::new(core_id, opt.mcdc_executable.clone().expect("to have a MCDC executable (--mcdc-executable)")),
             TimeFeedback::new(&time_observer),
             CustomFilepathToTestcaseFeedback::new(set_corpus_filepath, fuzzer_dir.to_path_buf())
         ),
@@ -344,6 +346,9 @@ define_run_client!(state, mgr, fuzzer_dir, core_id, opt, is_main_node, {
             if let Some(crash_exitcode) = opt.crash_exitcode {
                 executor_builder = executor_builder.crash_exitcode(crash_exitcode);
             }
+
+            // MCDC
+            executor.env("MCDC_ID", format!("{}", core_id.0));
 
             // Enable autodict if configured
             if !opt.no_autodict {
