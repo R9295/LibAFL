@@ -238,7 +238,7 @@ pub fn main() {
             NautilusSpliceMutator::new(&context),
             NautilusSpliceMutator::new(&context),
         ),
-        2,
+        5,
     );
     let mut stages = tuple_list!(StdMutationalStage::new(mutator));
 
